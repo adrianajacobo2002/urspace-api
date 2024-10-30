@@ -9,7 +9,7 @@ datasource db {
 
 model conversacion {
   id_conversacion                                       Int       @id @default(autoincrement())
-  fecha_inicio                                          DateTime? @default(now()) @db.Timestamp(6)
+  fecha_inicio                                          DateTime  @db.Timestamp(6)
   usuario_remitente_id                                  Int?
   usuario_destinatario_id                               Int?
   usuario_conversacion_usuario_destinatario_idTousuario usuario?  @relation("conversacion_usuario_destinatario_idTousuario", fields: [usuario_destinatario_id], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
@@ -24,16 +24,16 @@ model etiqueta {
 }
 
 model imagenterreno {
-  id_imagen  Int      @id @default(autoincrement())
-  url_imagen String
-  terreno_id Int?
-  terreno    terreno? @relation(fields: [terreno_id], references: [id_terreno], onDelete: Cascade, onUpdate: NoAction)
+  id_imagen_terreno Int      @id @default(autoincrement())
+  url_imagen        String
+  terreno_id        Int?
+  terreno           terreno? @relation(fields: [terreno_id], references: [id_terreno], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model mensaje {
   id_mensaje           Int           @id @default(autoincrement())
   mensaje              String
-  fecha_envio          DateTime?     @default(now()) @db.Timestamp(6)
+  fecha_envio          DateTime      @db.Timestamp(6)
   usuario_remitente_id Int?
   conversacion_id      Int?
   conversacion         conversacion? @relation(fields: [conversacion_id], references: [id_conversacion], onDelete: Cascade, onUpdate: NoAction)
@@ -41,42 +41,43 @@ model mensaje {
 }
 
 model notificacion {
-  id_notificacion Int       @id @default(autoincrement())
-  tipo            String    @db.VarChar(100)
+  id_notificacion Int      @id @default(autoincrement())
+  tipo            String   @db.VarChar(50)
   mensaje         String
-  fecha_envio     DateTime? @default(now()) @db.Timestamp(6)
-  leido           Boolean?  @default(false)
+  fecha_envio     DateTime @db.Timestamp(6)
+  leido           Boolean? @default(false)
   usuario_id      Int?
-  usuario         usuario?  @relation(fields: [usuario_id], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
+  usuario         usuario? @relation(fields: [usuario_id], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model pago {
   id_pago        Int          @id @default(autoincrement())
   monto          Decimal      @db.Decimal(10, 2)
-  fecha_pago     DateTime?    @default(now()) @db.Timestamp(6)
-  metodo_pago    String       @db.VarChar(100)
-  estado         estado_pago? @default(Pendiente)
+  fecha_pago     DateTime     @db.Timestamp(6)
+  metodo_pago    String       @db.VarChar(50)
+  estado         estado_pago
   reservacion_id Int?
   reservacion    reservacion? @relation(fields: [reservacion_id], references: [id_reservacion], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model reservacion {
-  id_reservacion Int             @id @default(autoincrement())
-  fecha_inicio   DateTime        @db.Date
-  fecha_fin      DateTime        @db.Date
-  impuestos      Decimal?        @default(0) @db.Decimal(10, 2)
-  subtotal       Decimal         @db.Decimal(10, 2)
-  precio_total   Decimal         @db.Decimal(10, 2)
-  estado         estado_reserva? @default(Pendiente)
+  id_reservacion Int            @id @default(autoincrement())
+  fecha_inicio   DateTime       @db.Date
+  fecha_fin      DateTime       @db.Date
+  impuestos      Decimal?       @db.Decimal(10, 2)
+  subtotal       Decimal        @db.Decimal(10, 2)
+  precio_total   Decimal        @db.Decimal(10, 2)
   terreno_id     Int?
   usuario_id     Int?
+  estado         estado_reserva
   pago           pago[]
-  terreno        terreno?        @relation(fields: [terreno_id], references: [id_terreno], onDelete: Cascade, onUpdate: NoAction)
-  usuario        usuario?        @relation(fields: [usuario_id], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
+  terreno        terreno?       @relation(fields: [terreno_id], references: [id_terreno], onDelete: Cascade, onUpdate: NoAction)
+  usuario        usuario?       @relation(fields: [usuario_id], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model terreno {
   id_terreno        Int               @id @default(autoincrement())
+  nombre            String            @db.VarChar(100)
   ubicacion         String            @db.VarChar(255)
   latitud           Decimal?          @db.Decimal(10, 8)
   longitud          Decimal?          @db.Decimal(11, 8)
@@ -84,57 +85,70 @@ model terreno {
   precio            Decimal           @db.Decimal(10, 2)
   tipo_terreno      tipo_terreno
   descripcion       String?
-  publicado         Boolean?          @default(true)
-  fecha_publicacion DateTime?         @default(now()) @db.Timestamp(6)
+  publicado         Boolean?          @default(false)
+  fecha_publicacion DateTime?         @db.Date
+  terreno_id        Int?
   usuario_id        Int?
   imagenterreno     imagenterreno[]
+  oferta            oferta[]
   reservacion       reservacion[]
+  terreno           terreno?          @relation("terrenoToterreno", fields: [terreno_id], references: [id_terreno], onUpdate: NoAction)
+  other_terreno     terreno[]         @relation("terrenoToterreno")
   usuario           usuario?          @relation(fields: [usuario_id], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
   terrenoetiqueta   terrenoetiqueta[]
   valoracion        valoracion[]
 }
 
 model terrenoetiqueta {
-  id_terreno  Int
-  id_etiqueta Int
-  etiqueta    etiqueta @relation(fields: [id_etiqueta], references: [id_etiqueta], onDelete: Cascade, onUpdate: NoAction)
-  terreno     terreno  @relation(fields: [id_terreno], references: [id_terreno], onDelete: Cascade, onUpdate: NoAction)
-
-  @@id([id_terreno, id_etiqueta])
+  id_terreno_etiqueta Int       @id @default(autoincrement())
+  terreno_id          Int?
+  etiqueta_id         Int?
+  etiqueta            etiqueta? @relation(fields: [etiqueta_id], references: [id_etiqueta], onDelete: Cascade, onUpdate: NoAction)
+  terreno             terreno?  @relation(fields: [terreno_id], references: [id_terreno], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model usuario {
   id_usuario                                                 Int            @id @default(autoincrement())
   nombres                                                    String         @db.VarChar(100)
   apellidos                                                  String         @db.VarChar(100)
-  email                                                      String         @unique @db.VarChar(150)
-  contrasenia                                                String         @db.VarChar(255)
-  dui                                                        String         @unique @db.VarChar(15)
-  fecha_registro                                             DateTime?      @default(now()) @db.Timestamp(6)
+  email                                                      String         @unique @db.VarChar(100)
+  contrasenia                                                String         @db.VarChar(100)
+  dui                                                        String         @unique @db.VarChar(10)
+  fecha_registro                                             DateTime       @db.Date
   conversacion_conversacion_usuario_destinatario_idTousuario conversacion[] @relation("conversacion_usuario_destinatario_idTousuario")
   conversacion_conversacion_usuario_remitente_idTousuario    conversacion[] @relation("conversacion_usuario_remitente_idTousuario")
   mensaje                                                    mensaje[]
   notificacion                                               notificacion[]
+  oferta                                                     oferta[]
   reservacion                                                reservacion[]
   terreno                                                    terreno[]
   valoracion                                                 valoracion[]
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model valoracion {
-  id_valoracion    Int       @id @default(autoincrement())
+  id_valoracion    Int      @id @default(autoincrement())
   calificacion     Int?
   comentario       String?
-  fecha_valoracion DateTime? @default(now()) @db.Timestamp(6)
+  fecha_valoracion DateTime @db.Date
   terreno_id       Int?
   usuario_id       Int?
-  terreno          terreno?  @relation(fields: [terreno_id], references: [id_terreno], onDelete: Cascade, onUpdate: NoAction)
-  usuario          usuario?  @relation(fields: [usuario_id], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
+  terreno          terreno? @relation(fields: [terreno_id], references: [id_terreno], onDelete: Cascade, onUpdate: NoAction)
+  usuario          usuario? @relation(fields: [usuario_id], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model oferta {
+  id_oferta    Int      @id @default(autoincrement())
+  fecha_oferta DateTime @db.Timestamp(6)
+  terreno_id   Int?
+  usuario_id   Int?
+  terreno      terreno? @relation(fields: [terreno_id], references: [id_terreno], onDelete: Cascade, onUpdate: NoAction)
+  usuario      usuario? @relation(fields: [usuario_id], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction)
 }
 
 enum estado_pago {
   Pendiente
   Cancelado
+  Completada
 }
 
 enum estado_reserva {
